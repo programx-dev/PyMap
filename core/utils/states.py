@@ -1,5 +1,9 @@
 from aiogram.fsm.state import StatesGroup, State
 
 
+class StepsTest(StatesGroup):
+    TEST = State()
+
+
 class StepsQuizze(StatesGroup):
-    GET_QUZZE = State()
+    QUIZZE = State()

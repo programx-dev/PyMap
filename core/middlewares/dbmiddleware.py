@@ -18,4 +18,4 @@ class DbSession(BaseMiddleware):
     ) -> Any:
         async with self.connector.acquire() as connect:
             data['request'] = Request(connect)
-            return await   handler(event, data)
+            return await handler(event, data)

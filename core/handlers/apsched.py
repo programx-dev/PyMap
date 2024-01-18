@@ -1,15 +1,18 @@
 from aiogram import Bot
+from core.utils.dbconnect import Request
+from core.utils.sender_quizze import SenderList
 
 
-async def send_message_time(bot: Bot):
-    await bot.send_message(5014277973, f"Это сообщение отправлено через несколько секунд после старта бота")
 
+async def send_message_cron(bot: Bot, id_admin: int, sender_quizze: SenderList, request: Request):
+    await bot.send_message(id_admin, "Начинаю рассылку викторин")
 
-async def send_message_cron(bot: Bot):
-    await bot.send_message(5014277973, f"Это сообщение будет отправлятся ежедневно в указанное время")
+    name_camp = "quizze_sending"
 
+    if not await request.check_table(name_camp):
+        await request.create_table(name_camp)
 
-async def send_message_interval(bot: Bot):
-    await bot.send_message(5014277973, f"Это сообщение будет отправлятся с интервалом в 1 минуту"
-    
-)
+    count = await sender_quizze.broadcaster(name_camp)
+
+    await bot.send_message(id_admin, f"Успешно разослал викторины [{count}] пользовательям")
+    await request.delete_table(name_camp)

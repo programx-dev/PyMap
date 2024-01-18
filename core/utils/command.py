@@ -13,8 +13,12 @@ async def set_commands(bot: Bot):
             description="🗺️ Дорожная карта"
         ),
         BotCommand(
+            command="test",
+            description="📝 Проверить свои знания"
+        ),
+        BotCommand(
             command="quizze",
-            description="📝 Тестирование"
+            description="📊 Викторина"
         ),
         BotCommand(
             command="cancel",
