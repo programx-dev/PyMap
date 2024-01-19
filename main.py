@@ -1,32 +1,21 @@
+import asyncio
+import asyncpg
+from datetime import datetime
 import logging
-# import betterlogging as logging
+import contextlib
 from aiogram import Bot, Dispatcher, F
 from aiogram.methods import DeleteWebhook
 from aiogram.fsm.storage.redis import RedisStorage
-import asyncio
-from core.settings import settings
 from aiogram.filters import Command
+from core.settings import settings
 from core.utils.command import set_commands
-from core.handlers import base
-from core.utils import callbackdata, sender_list, sender_quizze
-from core.middlewares.dbmiddleware import DbSession
-from core.middlewares import check_sub_middleware
-from core.utils import states, sender_state
-from core.handlers import test, quizze
-from core.handlers import callback
-from core.handlers import admin
-import asyncpg
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from core.handlers import apsched
-from datetime import datetime
-from core.handlers import sender
+from core.utils import callbackdata, sender_list, sender_quizze, states, sender_state
 from core.utils.dbconnect import Request
-import contextlib
+from core.middlewares.dbmiddleware import DbSession
+from core.middlewares import check_sub_middleware, trottling_middleware
+from core.handlers import test, quizze, callback, admin, base, apsched, sender
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from core.middlewares import trottling_middleware
-
-# "%(asctime)s - [%(levelname)s] - %(name)s"
-# "%(filename)s - %(funcName)s(%(lineno)d) -  %(message)s"
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s - [%(levelname)s] - (%(filename)s), line %(lineno)d - %(message)s")
@@ -60,6 +49,7 @@ async def start():
     scheduler.add_job(apsched.send_message_cron, trigger="cron", hour=13, start_date=datetime.now(), 
                       kwargs={"bot": bot, "id_admin": settings.bots.admin_id, "sender_quizze": sender_quizze_, "request": Request(pool_connect)})
     scheduler.start()
+    
     # :TODO отправлять в 13:00 # datetime.hour(13)
     #  hour=datetime.now().hour,
     #   minute=datetime.now().minute + 1,
