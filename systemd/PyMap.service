@@ -1,13 +1,13 @@
 [Unit]
-Description=PyRoute
+Description=PyMap
 After=syslog.target
 After=network.target
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/PyRoute
-ExecStart=/PyRoute/venv/bin/python3 /PyRoute/main.py
+WorkingDirectory=/PyMap
+ExecStart=/PyMap/venv/bin/python3 /PyMap/main.py
 RestartSec=10
 Restart=always
 
