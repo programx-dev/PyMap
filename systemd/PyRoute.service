@@ -1,0 +1,15 @@
+[Unit]
+Description=PyRoute
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/PyRoute
+ExecStart=/PyRoute/venv/bin/python3 /PyRoute/main.py
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
