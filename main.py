@@ -3,27 +3,54 @@ import asyncpg
 from datetime import datetime
 import logging
 import contextlib
+import sys
 from aiogram import Bot, Dispatcher, F
 from aiogram.methods import DeleteWebhook
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.filters import Command
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from core.settings import settings
 from core.utils.command import set_commands
-from core.utils import callbackdata, sender_list, sender_quizze, states, sender_state
+from core.utils import apsched_quizze, callbackdata, sender_list, sender_quizze, states, sender_state, rolling_gzip_file
 from core.utils.dbconnect import Request
-from core.middlewares.dbmiddleware import DbSession
-from core.middlewares import check_sub_middleware, trottling_middleware
-from core.handlers import test, quizze, callback, admin, base, apsched, sender
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from core.middlewares.db_middleware import DbSession
+from core.middlewares import trottling_middleware  # check_sub_middleware
+from core.handlers import test, quizze, callback, admin, base, sender
+from core.keyboards import admin_kb
 
 
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s - [%(levelname)s] - (%(filename)s), line %(lineno)d - %(message)s")
+file_handler = rolling_gzip_file.RollingGzipFileHandler(f"logs/{__name__}.log", mode="a", encoding="utf-8",
+                                      maxBytes=10485760)
+file_handler.setLevel(logging.DEBUG)
+
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.DEBUG)
+
+logging.basicConfig(level=logging.DEBUG,
+                    format="[%(asctime)s,%(msecs)03d %(levelname)s] - %(name)s - (%(filename)s:%(lineno)d) %(message)s",
+                    datefmt="%m/%d/%Y %H:%M:%S",
+                    handlers=[file_handler, stream_handler])
+
+logging.getLogger("aiogram.event").setLevel(logging.WARNING)
+logging.getLogger("aiogram.utils.chat_action").setLevel(logging.INFO)
+
+# "%(asctime)s - [%(levelname)s] - (%(filename)s), line %(lineno)d - %(message)s"
+# "%(name)s (%(filename)s) (%(asctime)s,%(msecs)03d) [%(levelname)s] :%(lineno)d - %(message)s"
+
+
+def excepthook(exc_type, exc_value, exc_tb):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_tb)
+        return
+
+    logging.error("Неперехваченное исключение", exc_info=(exc_type, exc_value, exc_tb))
+
+    # "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
 
 
 async def start_bot(bot: Bot):
     await set_commands(bot)
-    await bot.send_message(settings.bots.admin_id, text="Бот запущен!")
+    await bot.send_message(settings.bots.admin_id, text="Бот запущен!", reply_markup=admin_kb.admin_kb)
 
 
 async def stop_bot(bot: Bot):
@@ -42,20 +69,22 @@ async def start():
     storage = RedisStorage.from_url("redis://localhost:6379/0")
     dp = Dispatcher(storage=storage)
 
-
-    sender_quizze_ = sender_quizze.SenderList(bot, dp, Request(pool_connect))
+    sender_quizze_ = sender_quizze.SenderList(bot, dp, settings.channel_id, Request(pool_connect))
 
     scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
-    scheduler.add_job(apsched.send_message_cron, trigger="cron", hour=13, start_date=datetime.now(), 
+    scheduler.add_job(apsched_quizze.send_message_cron, trigger="cron", hour=13, start_date=datetime.now(),
                       kwargs={"bot": bot, "id_admin": settings.bots.admin_id, "sender_quizze": sender_quizze_, "request": Request(pool_connect)})
+    # scheduler.add_job(apsched.send_message_cron, trigger="cron", hour=datetime.now().hour, minute=datetime.now().minute + 1, start_date=datetime.now(),
+    #                   kwargs={"bot": bot, "id_admin": settings.bots.admin_id, "sender_quizze": sender_quizze_, "request": Request(pool_connect)})
     scheduler.start()
-    
+
     # :TODO отправлять в 13:00 # datetime.hour(13)
     #  hour=datetime.now().hour,
     #   minute=datetime.now().minute + 1,
 
     dp.update.middleware.register(DbSession(pool_connect))
-    dp.message.middleware.register(check_sub_middleware.CheckSubMiddleware(settings.channel_id))
+    # dp.message.middleware.register(check_sub_middleware.CheckSubMiddlewareMessage(settings.channel_id))
+    # dp.callback_query.middleware.register(check_sub_middleware.CheckSubMiddlewareCallback(settings.channel_id))
     dp.message.middleware.register(trottling_middleware.TrottlingMiddlware(storage))
 
     dp.startup.register(start_bot)
@@ -75,14 +104,14 @@ async def start():
     dp.callback_query.register(callback.get_lst_quizze_forward, callbackdata.QuizzeForward.filter())
     dp.poll_answer.register(quizze.get_quizze_answer)
 
-    dp.callback_query.register(callback.check_sub_cannel, F.data == "check_sub_cannel")
+    dp.callback_query.register(callback.check_sub_channel, F.data == "check_sub_channel")
 
-    dp.message.register(sender.get_sender, Command("sender", magic=F.args),  F.chat.id == settings.bots.admin_id)
+    dp.message.register(sender.get_sender, Command("sender"),  F.chat.id == settings.bots.admin_id)
     dp.message.register(sender.get_message, sender_state.Steps.get_message)
     dp.callback_query.register(sender.q_button, sender_state.Steps.q_button)
     dp.message.register(sender.get_text_button, sender_state.Steps.get_text_button)
     dp.message.register(sender.get_url_button, sender_state.Steps.get_url_button)
-    dp.callback_query.register(sender.sender_decide, sender_state.Steps.get_url_button)
+    dp.callback_query.register(sender.sender_decide, sender_state.Steps.sender_decide)
 
     dp.message.register(admin.get_photo_id, F.photo, F.from_user.id == settings.bots.admin_id)
     dp.message.register(admin.get_document_id, F.document, F.from_user.id == settings.bots.admin_id)
@@ -103,12 +132,17 @@ async def start():
         await bot(DeleteWebhook(drop_pending_updates=True))
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types(), sender_list=sender_lst, channel_id=settings.channel_id)
     except Exception as ex:
-        logging.error(f"[!!! Exception] - {ex}", exc_info=True)
+        logging.error(f"Неперехваченное исключение", exc_info=True)
     finally:
         logging.warning("Бот остановлен!")
         await bot.session.close()
         await dp.storage.close()
 
 if __name__ == "__main__":
+    sys.excepthook = excepthook
+
+    with open(f"logs/{__name__}.log", mode="a", encoding="utf-8") as file:
+        file.write(f"{datetime.now().strftime(' %m/%d/%Y %H:%M:%S '):=^100}\n")
+
     with contextlib.suppress(KeyboardInterrupt, SystemExit):
         asyncio.run(start())

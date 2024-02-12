@@ -5,7 +5,7 @@ from core.utils.callbackdata import Quizze
 from aiogram.types import CallbackQuery, PollAnswer
 from aiogram import Bot
 from core.utils.dbconnect import Request
-from core.keyboards import inline
+from core.keyboards import inline_kb
 import logging
 from aiogram.utils.chat_action import ChatActionSender
 
@@ -32,22 +32,22 @@ async def get_quizze(call: CallbackQuery, bot: Bot, callback_data: Quizze, state
 
 async def get_quizze_answer(poll_answer: PollAnswer, bot: Bot, state: FSMContext, request: Request):
     if await state.get_state() != str(StepsQuizze.QUIZZE.state):
-        await bot.send_message(poll_answer.user.id, "⚠️ Я могу узнать результат только последней отправленной викторины")
+        await bot.send_message(poll_answer.user.id, "⚠️ Извините, я не могу получить результат выполнения этой задачи")
         return
 
     tmp = await state.get_data()
 
     if tmp["poll_id"] == poll_answer.poll_id:
         if poll_answer.option_ids[0] == (await state.get_data())["correct_answer"]:
-            await bot.send_message(poll_answer.user.id, "🥳 Вы верно ответили на викторину")
+            await bot.send_message(poll_answer.user.id, "✅ Вы верно ответили на задачу")
             await request.add_data_correct_quizzes(user_id=poll_answer.user.id,
                                                    user_name=poll_answer.user.first_name,
                                                    quizze_id=tmp["quizze_id"])
         else:
-            await bot.send_message(poll_answer.user.id, "🙁 Вы неверно ответили на викторину")
+            await bot.send_message(poll_answer.user.id, "❌ Вы неверно ответили на задачу")
             await request.add_data_wrong_quizzes(user_id=poll_answer.user.id,
                                                  user_name=poll_answer.user.first_name,
                                                  quizze_id=tmp["quizze_id"])
         await state.clear()
     else:
-        await bot.send_message(poll_answer.user.id, "⚠️ Я могу узнать результат только последней отправленной викторины")
+        await bot.send_message(poll_answer.user.id, "⚠️ Я могу узнать результат только последней отправленной задачи")

@@ -3,7 +3,7 @@ from aiogram import Bot
 from aiogram.filters import CommandObject
 from aiogram.fsm.context import FSMContext
 from core.utils.sender_state import Steps
-from core.keyboards.inline import get_confirm_button_sender
+from core.keyboards.inline_kb import get_confirm_button_sender
 from core.utils.dbconnect import Request
 from core.utils.sender_list import SenderList
 
@@ -30,14 +30,16 @@ async def get_message(message: Message, state: FSMContext):
 
 async def q_button(call: CallbackQuery, bot: Bot, state: FSMContext):
     if call.data == "add_button":
-        await call.message.answer("Отправьте текст для кнопки.")
+        await call.message.edit_text("Отправьте текст для кнопки.")
         await state.set_state(Steps.get_text_button)
     elif call.data == "no_button":
+        await call.message.delete()
+
         data = await state.get_data()
         message_id = int(data["message_id"])
         chat_id = int(data["chat_id"])
 
-        await confirm(call.message, bot, message_id, chat_id)
+        await confirm(call.message, bot, state, message_id, chat_id)
 
     await call.answer()
 
@@ -64,11 +66,10 @@ async def get_url_button(message: Message, bot: Bot, state: FSMContext):
     message_id = int(data["message_id"])
     chat_id = int(data["chat_id"])
 
-    await confirm(message, bot, message_id, chat_id, added_keyboards)
+    await confirm(message, bot, state, message_id, chat_id, added_keyboards)
 
 
-
-async def confirm(message: Message, bot: Bot, message_id: int, chat_id: int, reply_markup: InlineKeyboardMarkup = None):
+async def confirm(message: Message, bot: Bot, state: FSMContext, message_id: int, chat_id: int, reply_markup: InlineKeyboardMarkup = None):
     await bot.copy_message(chat_id, chat_id, message_id, reply_markup=reply_markup)
     await message.answer("Вот сообщение кторое будет отправлено. Подтвердите.",
                          reply_markup=InlineKeyboardMarkup(inline_keyboard=[
@@ -86,14 +87,16 @@ async def confirm(message: Message, bot: Bot, message_id: int, chat_id: int, rep
                             ]
                          ]))
 
+    await state.set_state(Steps.sender_decide)
+
 
 async def sender_decide(call: CallbackQuery, bot: Bot, state: FSMContext, request: Request, sender_list: SenderList):
     data = await state.get_data()
 
     message_id = data["message_id"]
     chat_id = data["chat_id"]
-    text_button = data["text_button"]
-    url_button = data.get("url_button")
+    text_button = data.get("text_button", None)
+    url_button = data.get("url_button", None)
     name_camp = data["name_camp"]
 
     if call.data == "confirm_sender":

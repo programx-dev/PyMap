@@ -18,7 +18,7 @@ async def set_commands(bot: Bot):
         ),
         BotCommand(
             command="quizze",
-            description="📊 Викторина"
+            description="🧩 Задачи"
         ),
         BotCommand(
             command="cancel",

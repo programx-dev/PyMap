@@ -6,3 +6,4 @@ class Steps(StatesGroup):
     q_button = State()
     get_text_button = State()
     get_url_button = State()
+    sender_decide = State()

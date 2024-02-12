@@ -5,7 +5,7 @@ from core.utils.callbackdata import Test
 from aiogram.types import CallbackQuery
 from aiogram import Bot
 from core.utils.dbconnect import Request
-from core.keyboards import inline
+from core.keyboards import inline_kb
 import logging
 from aiogram.utils.chat_action import ChatActionSender
 
@@ -29,7 +29,7 @@ async def init_test(call: CallbackQuery, bot: Bot, callback_data: Test, state: F
     info_bar = f"✅ <i>Знаю 0</i> | 📚 <i>Выучить 0</i> | ⏭ <i>Пропущено 0</i> | <b>Вопрос 1 / {len(children)}</b>"
     message = info_bar + f"\n\n<b>{question}</b>"
 
-    await call.message.answer(text=message, reply_markup=await inline.get_inline_keyboard_test())
+    await call.message.answer(text=message, reply_markup=await inline_kb.get_inline_keyboard_test())
     await call.answer()
 
 
@@ -83,7 +83,7 @@ async def get_test(call: CallbackQuery, bot: Bot, state: FSMContext, request: Re
     message = f"✅ <i>Знаю {tmp['know']}</i> | 📚 <i>Выучить {tmp['not_know']}</i> | ⏭ <i>Пропущено {tmp['skip']}</i> | <b>Вопрос {tmp['current'] + 1} / {len(children)}</b>"\
         f"\n\n<b>{question}</b>"
 
-    await call.message.answer(text=message, reply_markup=await inline.get_inline_keyboard_test())
+    await call.message.answer(text=message, reply_markup=await inline_kb.get_inline_keyboard_test())
     await call.answer()
 
 
@@ -97,7 +97,7 @@ async def get_answer_test(call: CallbackQuery, bot: Bot, state: FSMContext, requ
     message = f"✅ <i>Знаю {tmp['know']}</i> | 📚 <i>Выучить {tmp['not_know']}</i> | ⏭ <i>Пропущено {tmp['skip']}</i> | <b>Вопрос {tmp['current'] + 1} / {len(children)}</b>\n\n" +\
         (answer if call.data == "show_answer" else question)
 
-    await call.message.edit_text(text=message, reply_markup=await inline.get_inline_keyboard_test(show_answer=call.data == "show_question"))
+    await call.message.edit_text(text=message, reply_markup=await inline_kb.get_inline_keyboard_test(show_answer=call.data == "show_question"))
     await call.answer()
         
 
@@ -109,7 +109,7 @@ async def get_ignore(message: Message, bot: Bot, state: FSMContext, request: Req
 
 async def get_stop_confirm(message: Message, bot: Bot, state: FSMContext, request: Request):
     await message.delete()
-    await message.answer(text="Завершить тестирование досрочно?", reply_markup=await inline.get_stop_test())
+    await message.answer(text="Завершить тестирование досрочно?", reply_markup=await inline_kb.get_stop_test())
 
 
 async def stop_test(call: CallbackQuery, bot: Bot, state: FSMContext, request: Request):

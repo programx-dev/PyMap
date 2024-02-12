@@ -17,5 +17,5 @@ class DbSession(BaseMiddleware):
         data: Dict[str, Any],
     ) -> Any:
         async with self.connector.acquire() as connect:
-            data['request'] = Request(connect)
+            data["request"] = Request(connect)
             return await handler(event, data)

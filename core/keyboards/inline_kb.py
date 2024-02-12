@@ -7,7 +7,7 @@ keyboard_builder = InlineKeyboardBuilder()
 keyboard_builder.button(text="Дорожная карта", callback_data=callbackdata.Roadmap(id=2))
 intline_keyboard_start = keyboard_builder.as_markup()
 
-inline_sub_cahhel = InlineKeyboardMarkup(inline_keyboard=[
+inline_sub_channel = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
             text="➕ Подписаться",
@@ -17,7 +17,7 @@ inline_sub_cahhel = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
             text="✅ Проверить подписку",
-            callback_data="check_sub_cannel"
+            callback_data="check_sub_channel"
         )
     ]
 ])
@@ -30,7 +30,7 @@ async def get_inline_keyboard_roadmap(children: list[str], request: Request):
         name = (await request.get_data_roadmap(id=id))[1]
         keyboard_builder.button(text=name, callback_data=callbackdata.Roadmap(id=id))
 
-    keyboard_builder.button(text="❌ Удалить", callback_data="delete")
+    keyboard_builder.button(text="Удалить", callback_data="delete")
 
     tmp = [2] * (len(children) // 2)
 

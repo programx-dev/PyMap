@@ -11,13 +11,13 @@ from random import choice
 from aiogram.fsm.storage.base import StorageKey
 from aiogram.fsm.context import FSMContext
 import logging
-import math
 
 
 class SenderList:
-    def __init__(self, bot: Bot, dp: Dispatcher, request: Request):
+    def __init__(self, bot: Bot, dp: Dispatcher, channel_id: str, request: Request):
         self.bot = bot
         self.dp = dp
+        self.channel_id = channel_id
         self.request = request
 
     async def update_statuse(self, table_name, user_id, statuse, description):
@@ -91,19 +91,26 @@ class SenderList:
 
             return quizze_id
 
+    def check_sub(self, chat_member: dict) -> bool:
+        if chat_member.status != "left":
+            return True
+
+        return False
+
     async def broadcaster(self, name_camp: str):
         users_ids = await self.get_users(name_camp)
         count = 0
 
         try:
             for user_id in users_ids:
-                quizze_id = await self.get_quizze_id(int(user_id))
+                if self.check_sub(await self.bot.get_chat_member(chat_id=self.channel_id, user_id=user_id)):
+                    quizze_id = await self.get_quizze_id(int(user_id))
 
-                if quizze_id != None:
-                    if await self.send_message(name_camp, int(user_id), quizze_id):
-                        count += 1
-                    await asyncio.sleep(.04)
+                    if quizze_id != None:
+                        if await self.send_message(name_camp, int(user_id), quizze_id):
+                            count += 1
+                        await asyncio.sleep(.04)
         finally:
-            logging.info(f"Разослали сообщение {count} пользователям")
+            logging.info(f"Успешно разослал задачи {count} пользователям")
 
         return count

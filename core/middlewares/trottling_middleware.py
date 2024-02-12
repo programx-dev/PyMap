@@ -3,6 +3,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Message
 from aiogram.fsm.storage.redis import RedisStorage
 import asyncio
+import logging
 
 
 class TrottlingMiddlware(BaseMiddleware):
@@ -23,7 +24,8 @@ class TrottlingMiddlware(BaseMiddleware):
         if check_user:
             if int(check_user.decode()) == 1:
                 await self.storage.redis.set(name=user, value=0, ex=2)
-                msg = await event.answer(f"Мы обнаружили подозрительную активность. Ждите 2 секунды")
+                msg = await event.answer("Мы обнаружили подозрительную активность. Ждите 2 секунды")
+                logging.info("Мы обнаружили подозрительную активность. Ждите 2 секунды")
                 await asyncio.sleep(1)
                 await msg.delete()
                 return

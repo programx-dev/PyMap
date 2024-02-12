@@ -2,9 +2,9 @@ from aiogram import Bot
 from aiogram.types import CallbackQuery
 from core.utils import callbackdata
 from core.utils.dbconnect import Request
-from core.keyboards.inline import get_inline_keyboard_roadmap
+from core.keyboards.inline_kb import get_inline_keyboard_roadmap
 from aiogram.utils.chat_action import ChatActionSender
-from core.keyboards import inline
+from core.keyboards import inline_kb
 
 
 async def delete_msg(call: CallbackQuery, bot: Bot):
@@ -12,12 +12,13 @@ async def delete_msg(call: CallbackQuery, bot: Bot):
     await call.answer()
 
 
-async def check_sub_cannel(call: CallbackQuery, bot: Bot, channel_id: str):
+async def check_sub_channel(call: CallbackQuery, bot: Bot, channel_id: str, request: Request):
     if (await bot.get_chat_member(chat_id=channel_id, user_id=call.from_user.id)).status == "left":
         await call.answer(text="❌ Вы не подписались на канал!", show_alert=True)
         return
 
     await call.answer(text="✅ Спасибо за подписку! Теперь вы можете пользоваться ботом!")
+
     await call.message.delete()
 
 
@@ -43,7 +44,7 @@ async def get_roadmap(call: CallbackQuery, bot: Bot, callback_data: callbackdata
 
 async def get_lst_quizze_back(call: CallbackQuery, bot: Bot, callback_data: callbackdata.QuizzeBack, request: Request):
     # async with ChatActionSender.typing(chat_id=call.message.chat.id, bot=bot, initial_sleep=0.5):
-    await call.message.edit_reply_markup(reply_markup=await inline.get_inline_keyboard_lst_quizze(offset=callback_data.offset - 1,
+    await call.message.edit_reply_markup(reply_markup=await inline_kb.get_inline_keyboard_lst_quizze(offset=callback_data.offset - 1,
                                                                                     user_id=call.from_user.id,
                                                                                     request=request))
 
@@ -52,7 +53,7 @@ async def get_lst_quizze_back(call: CallbackQuery, bot: Bot, callback_data: call
 
 async def get_lst_quizze_forward(call: CallbackQuery, bot: Bot, callback_data: callbackdata.QuizzeBack, request: Request):
     # async with ChatActionSender.typing(chat_id=call.message.chat.id, bot=bot, initial_sleep=0.5):
-    await call.message.edit_reply_markup(reply_markup=await inline.get_inline_keyboard_lst_quizze(offset=callback_data.offset + 1,
+    await call.message.edit_reply_markup(reply_markup=await inline_kb.get_inline_keyboard_lst_quizze(offset=callback_data.offset + 1,
                                                                                         user_id=call.from_user.id,
                                                                                         request=request))
 

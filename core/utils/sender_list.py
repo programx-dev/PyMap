@@ -58,6 +58,6 @@ class SenderList:
                     count += 1
                 await asyncio.sleep(.04)
         finally:
-            logging.info(f"Разослали сообщение {count} пользователям")
+            logging.info(f"Успешно разослал сообщение {count} пользователям")
 
         return count 
