@@ -14,13 +14,13 @@ from core.utils.command import set_commands
 from core.utils import apsched_quizze, callbackdata, sender_list, sender_quizze, states, sender_state, rolling_gzip_file
 from core.utils.dbconnect import Request
 from core.middlewares.db_middleware import DbSession
-from core.middlewares import trottling_middleware  # check_sub_middleware
+from core.middlewares import trottling_middleware, check_sub_middleware
 from core.handlers import test, quizze, callback, admin, base, sender
 from core.keyboards import admin_kb
 
 
 file_handler = rolling_gzip_file.RollingGzipFileHandler(f"logs/{__name__}.log", mode="a", encoding="utf-8",
-                                      maxBytes=10485760)
+                                                        maxBytes=10485760)
 file_handler.setLevel(logging.DEBUG)
 
 stream_handler = logging.StreamHandler()
@@ -83,8 +83,8 @@ async def start():
     #   minute=datetime.now().minute + 1,
 
     dp.update.middleware.register(DbSession(pool_connect))
-    # dp.message.middleware.register(check_sub_middleware.CheckSubMiddlewareMessage(settings.channel_id))
-    # dp.callback_query.middleware.register(check_sub_middleware.CheckSubMiddlewareCallback(settings.channel_id))
+    dp.message.middleware.register(check_sub_middleware.CheckSubMiddleware(settings.channel_id, settings.channel_link, Request(pool_connect)))
+    dp.callback_query.middleware.register(check_sub_middleware.CheckSubMiddleware(settings.channel_id, settings.channel_link, Request(pool_connect)))
     dp.message.middleware.register(trottling_middleware.TrottlingMiddlware(storage))
 
     dp.startup.register(start_bot)

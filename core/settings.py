@@ -12,6 +12,7 @@ class Bots:
 class Settings:
     bots: Bots
     channel_id: str
+    channel_link: str
 
 
 def get_settins(path: str):
@@ -23,7 +24,8 @@ def get_settins(path: str):
             bot_token=env.str("TOKEN"),
             admin_id=env.int("ADMIN_ID")
         ),
-        channel_id=env.str("CHANNEL_ID")
+        channel_id=env.str("CHANNEL_ID"),
+        channel_link=env.str("CHANNEL_LINK")
     )
 
 

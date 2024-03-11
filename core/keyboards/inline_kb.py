@@ -3,24 +3,33 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from core.utils import callbackdata
 from core.utils.dbconnect import Request
 
-keyboard_builder = InlineKeyboardBuilder()
-keyboard_builder.button(text="Дорожная карта", callback_data=callbackdata.Roadmap(id=2))
-intline_keyboard_start = keyboard_builder.as_markup()
+def get_inline_sub_channel(url: str):
+    inline_sub_channel = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="➕ Подписаться",
+                url=url
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="✅ Проверить подписку",
+                callback_data="check_sub_channel"
+            )
+        ]
+    ])
 
-inline_sub_channel = InlineKeyboardMarkup(inline_keyboard=[
-    [
-        InlineKeyboardButton(
-            text="➕ Подписаться",
-            url="https://t.me/+-bOtgtkW99s1YTMy"
-        )
-    ],
-    [
-        InlineKeyboardButton(
-            text="✅ Проверить подписку",
-            callback_data="check_sub_channel"
-        )
-    ]
-])
+    return inline_sub_channel
+
+
+def get_inline_keyboard_start(url: str):
+    keyboard_builder = InlineKeyboardBuilder()
+    keyboard_builder.button(text="🗺️ Дорожная карта", callback_data=callbackdata.Roadmap(id=2))
+    keyboard_builder.button(text="💬 Оставить отзыв", url=url)
+
+    keyboard_builder.adjust(1)
+
+    return keyboard_builder.as_markup()
 
 
 async def get_inline_keyboard_roadmap(children: list[str], request: Request):

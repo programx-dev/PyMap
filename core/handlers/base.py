@@ -20,10 +20,12 @@ async def get_start(message: Message, bot: Bot, request: Request, channel_id: st
 
         description, file_id = (await request.get_data_roadmap(id=1))[2:4]
 
-        await message.answer_photo(photo=file_id, caption=description, reply_markup=inline_kb.intline_keyboard_start)
+        url = (await request.get_data_roadmap(id=-1))[2]
 
-        if not check_sub(await bot.get_chat_member(chat_id=channel_id, user_id=message.from_user.id)):
-            await message.answer(text=(await request.get_data_roadmap(id=0))[2])
+        await message.answer_photo(photo=file_id, caption=description, reply_markup=inline_kb.get_inline_keyboard_start(url))
+
+        # if not check_sub(await bot.get_chat_member(chat_id=channel_id, user_id=message.from_user.id)):
+        #     await message.answer(text=(await request.get_data_roadmap(id=0))[2])
 
 
 async def get_roadmap(message: Message, bot: Bot, request: Request):
