@@ -1,5 +1,4 @@
 import asyncpg
-import logging
 
 
 class Request:
@@ -16,6 +15,12 @@ class Request:
                 f"VALUES ({user_id}, '{user_name}', $1, $2)"\
                 f"ON CONFLICT (user_id) DO UPDATE SET user_name='{user_name}'"
         await self.connector.execute(query, list(), list())
+
+    async def set_user_settings(self, user_id, user_name, newsletter):
+        query = f"INSERT INTO users (user_id, user_name, newsletter)"\
+                f"VALUES ({user_id}, '{user_name}', $1)"\
+                f"ON CONFLICT (user_id) DO UPDATE SET user_name='{user_name}', newsletter=$1"
+        await self.connector.execute(query, newsletter)
 
     async def get_data_users(self, user_id: int) -> list:
         query = f"SELECT * FROM users WHERE user_id={user_id}"

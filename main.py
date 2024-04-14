@@ -34,9 +34,6 @@ logging.basicConfig(level=logging.DEBUG,
 logging.getLogger("aiogram.event").setLevel(logging.WARNING)
 logging.getLogger("aiogram.utils.chat_action").setLevel(logging.INFO)
 
-# "%(asctime)s - [%(levelname)s] - (%(filename)s), line %(lineno)d - %(message)s"
-# "%(name)s (%(filename)s) (%(asctime)s,%(msecs)03d) [%(levelname)s] :%(lineno)d - %(message)s"
-
 
 def excepthook(exc_type, exc_value, exc_tb):
     if issubclass(exc_type, KeyboardInterrupt):
@@ -44,8 +41,6 @@ def excepthook(exc_type, exc_value, exc_tb):
         return
 
     logging.error("Неперехваченное исключение", exc_info=(exc_type, exc_value, exc_tb))
-
-    # "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
 
 
 async def start_bot(bot: Bot):
@@ -74,13 +69,9 @@ async def start():
     scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
     scheduler.add_job(apsched_quizze.send_message_cron, trigger="cron", hour=13, start_date=datetime.now(),
                       kwargs={"bot": bot, "id_admin": settings.bots.admin_id, "sender_quizze": sender_quizze_, "request": Request(pool_connect)})
-    # scheduler.add_job(apsched.send_message_cron, trigger="cron", hour=datetime.now().hour, minute=datetime.now().minute + 1, start_date=datetime.now(),
+    # scheduler.add_job(apsched_quizze.send_message_cron, trigger="cron", hour=datetime.now().hour, minute=datetime.now().minute + 1, start_date=datetime.now(),
     #                   kwargs={"bot": bot, "id_admin": settings.bots.admin_id, "sender_quizze": sender_quizze_, "request": Request(pool_connect)})
     scheduler.start()
-
-    # :TODO отправлять в 13:00 # datetime.hour(13)
-    #  hour=datetime.now().hour,
-    #   minute=datetime.now().minute + 1,
 
     dp.update.middleware.register(DbSession(pool_connect))
     dp.message.middleware.register(check_sub_middleware.CheckSubMiddleware(settings.channel_id, settings.channel_link, Request(pool_connect)))
@@ -118,19 +109,22 @@ async def start():
 
     dp.callback_query.register(callback.delete_msg, F.data == "delete")
     dp.callback_query.register(callback.get_roadmap, callbackdata.Roadmap.filter())
+    dp.callback_query.register(callback.set_settings, callbackdata.Settings.filter())
 
     dp.message.register(base.get_start, Command(commands="start"))
     dp.message.register(base.get_roadmap, Command(commands="roadmap"))
     dp.message.register(base.get_lst_test, Command(commands="test"))
     dp.message.register(base.get_lst_quizze, Command(commands="quizze"))
     dp.message.register(base.nothing_cancel, Command(commands="cancel"))
+    dp.message.register(base.get_settings, Command(commands="settings"))
 
     sender_lst = sender_list.SenderList(bot, pool_connect)
 
     try:
         logging.warning("Бот запущен!")
         await bot(DeleteWebhook(drop_pending_updates=True))
-        await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types(), sender_list=sender_lst, channel_id=settings.channel_id)
+        await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types(), admin_id=settings.bots.admin_id, 
+                               sender_list=sender_lst, channel_id=settings.channel_id)
     except Exception as ex:
         logging.error(f"Неперехваченное исключение", exc_info=True)
     finally:

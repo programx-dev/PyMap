@@ -23,6 +23,10 @@ async def set_commands(bot: Bot):
         BotCommand(
             command="cancel",
             description="↩️ Отмена"
+        ),
+        BotCommand(
+            command="settings",
+            description="⚙️ Настройки"
         )
     ]
 

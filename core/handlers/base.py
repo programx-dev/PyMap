@@ -12,7 +12,7 @@ def check_sub(chat_member: dict) -> bool:
     return False
 
 
-async def get_start(message: Message, bot: Bot, request: Request, channel_id: str):
+async def get_start(message: Message, bot: Bot, request: Request):
     await message.delete()
 
     async with ChatActionSender.typing(chat_id=message.chat.id, bot=bot, initial_sleep=0.5):
@@ -28,7 +28,7 @@ async def get_start(message: Message, bot: Bot, request: Request, channel_id: st
         #     await message.answer(text=(await request.get_data_roadmap(id=0))[2])
 
 
-async def get_roadmap(message: Message, bot: Bot, request: Request):
+async def get_roadmap(message: Message, request: Request):
     await message.delete()
 
     description, file_id, children, file_type = (await request.get_data_roadmap(id=2))[2:]
@@ -41,7 +41,7 @@ async def get_roadmap(message: Message, bot: Bot, request: Request):
             await message.answer_document(file_id, **kwargs)
 
 
-async def get_lst_test(message: Message, bot: Bot, request: Request):
+async def get_lst_test(message: Message, request: Request):
     await message.delete()
 
     children = (await request.get_data_test(id=1))[3]
@@ -50,7 +50,7 @@ async def get_lst_test(message: Message, bot: Bot, request: Request):
                          reply_markup=await inline_kb.get_inline_keyboard_lst_test(children=children, request=request))
 
 
-async def get_lst_quizze(message: Message, bot: Bot, request: Request):
+async def get_lst_quizze(message: Message, request: Request):
     await message.delete()
 
     await message.answer(text="Выберите задачу для её прохождения 🧩",
@@ -59,6 +59,12 @@ async def get_lst_quizze(message: Message, bot: Bot, request: Request):
                                                                                   request=request))
 
 
-async def nothing_cancel(message: Message, bot: Bot, request: Request):
+async def nothing_cancel(message: Message):
     await message.delete()
     await message.answer(text="Активной команды для отмены нет")
+
+
+async def get_settings(message: Message, request: Request):
+    settings = (await request.get_data_users(user_id=message.from_user.id))[4:]
+
+    await message.answer(text="⚙️ Настройки", reply_markup=inline_kb.get_inline_keyboard_settings(settings))

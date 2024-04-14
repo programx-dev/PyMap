@@ -1,19 +1,14 @@
-from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from core.utils.states import StepsQuizze
 from core.utils.callbackdata import Quizze
 from aiogram.types import CallbackQuery, PollAnswer
 from aiogram import Bot
 from core.utils.dbconnect import Request
-from core.keyboards import inline_kb
-import logging
-from aiogram.utils.chat_action import ChatActionSender
 
 
-async def get_quizze(call: CallbackQuery, bot: Bot, callback_data: Quizze, state: FSMContext, request: Request):
+async def get_quizze(call: CallbackQuery, callback_data: Quizze, state: FSMContext, request: Request):
     await call.message.delete()
 
-    # async with ChatActionSender.typing(chat_id=call.message.chat.id, bot=bot, initial_sleep=0.5):
     await state.set_state(StepsQuizze.QUIZZE)
 
     id = callback_data.id

@@ -3,19 +3,15 @@ from aiogram.fsm.context import FSMContext
 from core.utils.states import StepsTest
 from core.utils.callbackdata import Test
 from aiogram.types import CallbackQuery
-from aiogram import Bot
 from core.utils.dbconnect import Request
 from core.keyboards import inline_kb
-import logging
-from aiogram.utils.chat_action import ChatActionSender
 
 
-async def init_test(call: CallbackQuery, bot: Bot, callback_data: Test, state: FSMContext, request: Request):
+async def init_test(call: CallbackQuery, callback_data: Test, state: FSMContext, request: Request):
     id = callback_data.id
 
     await call.message.delete()
 
-    # async with ChatActionSender.typing(chat_id=call.message.chat.id, bot=bot, initial_sleep=0.5):
     await state.set_state(StepsTest.TEST)
     await state.update_data(test=id)
     await state.update_data(know=0)
@@ -33,8 +29,7 @@ async def init_test(call: CallbackQuery, bot: Bot, callback_data: Test, state: F
     await call.answer()
 
 
-async def get_test(call: CallbackQuery, bot: Bot, state: FSMContext, request: Request):
-    # async with ChatActionSender.typing(chat_id=call.message.chat.id, bot=bot, initial_sleep=0.5):
+async def get_test(call: CallbackQuery, state: FSMContext, request: Request):
     tmp = await state.get_data()
     id = tmp["test"]
 
@@ -87,7 +82,7 @@ async def get_test(call: CallbackQuery, bot: Bot, state: FSMContext, request: Re
     await call.answer()
 
 
-async def get_answer_test(call: CallbackQuery, bot: Bot, state: FSMContext, request: Request):
+async def get_answer_test(call: CallbackQuery, state: FSMContext, request: Request):
     tmp = await state.get_data()
     id = tmp["test"]
 
@@ -101,21 +96,20 @@ async def get_answer_test(call: CallbackQuery, bot: Bot, state: FSMContext, requ
     await call.answer()
         
 
-async def get_ignore(message: Message, bot: Bot, state: FSMContext, request: Request):
+async def get_ignore(message: Message):
     await message.delete()
     await message.answer(text="Во время выполнения тестирования нельзя выполнять другие команды."
                               "Для досрочного завершения тестирования /cancel")
 
 
-async def get_stop_confirm(message: Message, bot: Bot, state: FSMContext, request: Request):
+async def get_stop_confirm(message: Message):
     await message.delete()
     await message.answer(text="Завершить тестирование досрочно?", reply_markup=await inline_kb.get_stop_test())
 
 
-async def stop_test(call: CallbackQuery, bot: Bot, state: FSMContext, request: Request):
+async def stop_test(call: CallbackQuery, state: FSMContext, request: Request):
     await call.message.delete()
 
-    # async with ChatActionSender.typing(chat_id=call.message.chat.id, bot=bot, initial_sleep=0.5):
     if call.data == "stop_test":
         tmp = await state.get_data()
         id = tmp["test"]

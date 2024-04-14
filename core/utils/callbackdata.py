@@ -29,3 +29,7 @@ class TestKnow(CallbackData, prefix="test_know"):
 class TestNotKnow(CallbackData, prefix="test_not_know"):
     id: int
     current: int
+
+
+class Settings(CallbackData, prefix="settings"):
+    newsletter: bool

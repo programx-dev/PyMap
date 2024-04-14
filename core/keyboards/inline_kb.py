@@ -32,6 +32,17 @@ def get_inline_keyboard_start(url: str):
     return keyboard_builder.as_markup()
 
 
+def get_inline_keyboard_settings(settings: list):
+    keyboard_builder = InlineKeyboardBuilder()
+
+    keyboard_builder.button(text=f"{'Отключить' if settings[0] else 'Включить'} рассылку задач",
+                            callback_data=callbackdata.Settings(newsletter=settings[0]))
+
+    keyboard_builder.adjust(1)
+
+    return keyboard_builder.as_markup()
+
+
 async def get_inline_keyboard_roadmap(children: list[str], request: Request):
     keyboard_builder = InlineKeyboardBuilder()
 
@@ -68,7 +79,7 @@ async def get_inline_keyboard_lst_quizze(offset: int, user_id: int, request: Req
 
     keyboard_builder = InlineKeyboardBuilder()
 
-    correct_quizzes, wrong_quizzes = (await request.get_data_users(user_id=user_id))[2:]
+    correct_quizzes, wrong_quizzes, *_ = (await request.get_data_users(user_id=user_id))[2:]
     max_row = 4
     max_column = 4
 

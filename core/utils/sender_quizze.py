@@ -1,12 +1,10 @@
 from aiogram import Bot, Dispatcher
 import asyncpg
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.types import InlineKeyboardMarkup
 from aiogram.exceptions import TelegramRetryAfter
 import asyncio
 from core.utils.states import StepsQuizze
 from core.utils.dbconnect import Request
-from asyncpg.pool import Pool, PoolAcquireContext
+from asyncpg.pool import Pool
 from random import choice
 from aiogram.fsm.storage.base import StorageKey
 from aiogram.fsm.context import FSMContext
@@ -97,13 +95,19 @@ class SenderList:
 
         return False
 
+    async def check_newsletter(self, user_id: int):
+        newsletter = (await self.request.get_data_users(user_id))[4]
+        print(newsletter)
+        return newsletter
+
     async def broadcaster(self, name_camp: str):
         users_ids = await self.get_users(name_camp)
         count = 0
 
         try:
             for user_id in users_ids:
-                if self.check_sub(await self.bot.get_chat_member(chat_id=self.channel_id, user_id=user_id)):
+                if self.check_sub(await self.bot.get_chat_member(chat_id=self.channel_id, user_id=user_id))\
+                        and (await self.check_newsletter(user_id)):
                     quizze_id = await self.get_quizze_id(int(user_id))
 
                     if quizze_id != None:
