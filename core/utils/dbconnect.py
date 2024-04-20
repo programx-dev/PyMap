@@ -11,8 +11,8 @@ class Request:
         return lst
 
     async def add_data_user(self, user_id, user_name):
-        query = f"INSERT INTO users (user_id, user_name, correct_quizzes, wrong_quizzes)"\
-                f"VALUES ({user_id}, '{user_name}', $1, $2)"\
+        query = f"INSERT INTO users (user_id, user_name, correct_quizzes, wrong_quizzes, newsletter)"\
+                f"VALUES ({user_id}, '{user_name}', $1, $2, true)"\
                 f"ON CONFLICT (user_id) DO UPDATE SET user_name='{user_name}'"
         await self.connector.execute(query, list(), list())
 
